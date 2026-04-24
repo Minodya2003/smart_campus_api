@@ -1,8 +1,6 @@
 package com.smartcampus.api.endpoints;
 import com.smartcampus.api.response.ErrorResponse;
-import com.smartcampus.core.domain.room.Room;
 import com.smartcampus.core.domain.sensor.Sensor;
-import com.smartcampus.core.domain.reading.SensorReading;
 import com.smartcampus.infrastructure.persistence.DataStore;
 import com.smartcampus.core.errors.LinkedResourceNotFoundException;
 import javax.ws.rs.*;
