@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Campus API Testing Guide</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background: #f5f7fb;
+      color: #222;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+    h1, h2, h3 { color: #0f2d5c; }
+    h1 { margin-bottom: 10px; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 18px 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      border-left: 6px solid #2f6fed;
+    }
+    .muted { color: #555; }
+    code.inline {
+      background: #eef3ff;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: Consolas, monospace;
+    }
+    pre {
+      background: #111827;
+      color: #f9fafb;
+      padding: 14px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+    .method {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: bold;
+      color: white;
+      font-size: 13px;
+      margin-right: 10px;
+    }
+    .GET    { background: #0ea5e9; }
+    .POST   { background: #10b981; }
+    .DELETE { background: #ef4444; }
+    .section-note {
+      background: #fff8db;
+      border: 1px solid #f1dd7a;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin: 16px 0 24px;
+    }
+    ul { margin-top: 8px; }
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Smart Campus API Testing Guide</h1>
+  <p class="muted">HTML test reference for the Smart Campus Sensor &amp; Room Management API.</p>
+
+  <!-- PROJECT OVERVIEW -->
+  <div class="card">
+    <h2>Project Overview</h2>
+    <p>This Smart Campus API is running on <b>Apache Tomcat 10.1</b> and is accessible through the base URL shown below. The system was developed as part of the <b>5COSC022W Client-Server Architectures</b> coursework using JAX-RS / Jersey 3.1.3.</p>
+    <p>The API simulates a campus environment where:</p>
+    <ul>
+      <li>Rooms can be created and managed</li>
+      <li>Sensors can be assigned to rooms</li>
+      <li>Sensor readings can be recorded and retrieved</li>
+    </ul>
+    <p>All data is stored <b>in memory (HashMap / ArrayList)</b> as required by the coursework, so data will reset when the server restarts.</p>
+    <p>This API follows REST principles including:</p>
+    <ul>
+      <li>Resource-based endpoints</li>
+      <li>Proper HTTP methods (GET, POST, DELETE)</li>
+      <li>Structured JSON error responses via custom exception mappers</li>
+      <li>Error handling with correct status codes (400, 403, 404, 409, 422, 500)</li>
+      <li>Request and response logging via JAX-RS ContainerRequestFilter</li>
+    </ul>
+    <p><b>Status:</b> Server is running and ready for testing.</p>
+  </div>
+
+  <!-- BASE URL -->
+  <div class="card">
+    <h2>Base URL</h2>
+    <pre>http://localhost:8080/api/v1</pre>
+    <div class="section-note">
+      Use this base URL in Postman or with curl. All examples below assume Tomcat deployed the WAR as
+      <code class="inline">smart-campus-api</code>. If your context path differs (e.g.
+      <code class="inline">smart-campus-api-1.0-SNAPSHOT</code>), update accordingly.
+    </div>
+  </div>
+
+  <!-- 1. DISCOVERY -->
+  <div class="card">
+    <h2>1. Discovery Endpoint</h2>
+    <p><span class="method GET">GET</span><code class="inline">/api/v1/</code></p>
+    <h3>Request</h3>
+    <pre>GET http://localhost:8080/api/v1/</pre>
+    <h3>Expected Response</h3>
+    <pre>{
+  "version": "1.0",
+  "description": "Smart Campus Sensor &amp; Room Management API",
+  "contact": "admin@smartcampus.com",
+  "resources": {
+    "rooms": "/api/v1/rooms",
+    "sensors": "/api/v1/sensors"
+  }
+}</pre>
+  </div>
+
+  <!-- 2. CREATE ROOM -->
+  <div class="card">
+    <h2>2. Create Room</h2>
+    <p><span class="method POST">POST</span><code class="inline">/api/v1/rooms</code></p>
+    <p class="muted">Header: <code class="inline">Content-Type: application/json</code></p>
+    <h3>Raw JSON Body</h3>
+    <pre>{
+  "id": "R1",
+  "name": "Lab 1",
+  "capacity": 40,
+  "sensorIds": []
+}</pre>
+    <h3>curl (Windows)</h3>
+    <pre>curl -X POST http://localhost:8080/api/v1/rooms ^
+-H "Content-Type: application/json" ^
+-d "{\"id\":\"R1\",\"name\":\"Lab 1\",\"capacity\":40,\"sensorIds\":[]}"</pre>
+    <h3>Expected Response — 201 Created</h3>
+    <pre>{
+  "id": "R1",
+  "name": "Lab 1",
+  "capacity": 40,
+  "sensorIds": []
+}</pre>
+  </div>
+
+  <!-- 3. CREATE SECOND ROOM -->
+  <div class="card">
+    <h2>3. Create Second Room (for DELETE test)</h2>
+    <p><span class="method POST">POST</span><code class="inline">/api/v1/rooms</code></p>
+    <p class="muted">Header: <code class="inline">Content-Type: application/json</code></p>
+    <h3>Raw JSON Body</h3>
+    <pre>{
+  "id": "R2",
+  "name": "Conference Room",
+  "capacity": 20,
+  "sensorIds": []
+}</pre>
+    <h3>Expected Response — 201 Created</h3>
+    <pre>{
+  "id": "R2",
+  "name": "Conference Room",
+  "capacity": 20,
+  "sensorIds": []
+}</pre>
+  </div>
+
+  <!-- 4. GET ALL ROOMS -->
+  <div class="card">
+    <h2>4. Get All Rooms</h2>
+    <p><span class="method GET">GET</span><code class="inline">/api/v1/rooms</code></p>
+    <h3>Request</h3>
+    <pre>GET http://localhost:8080/api/v1/rooms</pre>
+    <h3>Expected Response — 200 OK</h3>
+    <pre>[
+  {
+    "id": "R1",
+    "name": "Lab 1",
+    "capacity": 40,
+    "sensorIds": []
+  },
+  {
+    "id": "R2",
+    "name": "Conference Room",
+    "capacity": 20,
+    "sensorIds": []
+  }
+]</pre>
+  </div>
+
+  <!-- 5. GET SINGLE ROOM -->
+  <div class="card">
+    <h2>5. Get Single Room by ID</h2>
+    <p><span class="method GET">GET</span><code class="inline">/api/v1/rooms/R1</code></p>
+    <h3>Request</h3>
+    <pre>GET http://localhost:8080/api/v1/rooms/R1</pre>
+    <h3>Expected Response — 200 OK</h3>
+    <pre>{
+  "id": "R1",
+  "name": "Lab 1",
+  "capacity": 40,
+  "sensorIds": []
+}</pre>
+    <h3>Invalid ID — 404 Not Found</h3>
+    <pre>GET http://localhost:8080/api/v1/rooms/INVALID</pre>
+    <pre>{
+  "status": 404,
+  "error": "Not Found",
+  "message": "Room not found: INVALID"
+}</pre>
+  </div>
+
+  <!-- 6. CREATE SENSOR ACTIVE -->
+  <div class="card">
+    <h2>6. Create Sensor (ACTIVE)</h2>
+    <p><span class="method POST">POST</span><code class="inline">/api/v1/sensors</code></p>
+    <p class="muted">Header: <code class="inline">Content-Type: application/json</code></p>
+    <h3>Raw JSON Body</h3>
+    <pre>{
+  "id": "S1",
+  "type": "Temperature",
+  "status": "ACTIVE",
+  "currentValue": 22.5,
+  "roomId": "R1"
+}</pre>
+    <h3>curl (Windows)</h3>
+    <pre>curl -X POST http://localhost:8080/api/v1/sensors ^
+-H "Content-Type: application/json" ^
+-d "{\"id\":\"S1\",\"type\":\"Temperature\",\"status\":\"ACTIVE\",\"currentValue\":22.5,\"roomId\":\"R1\"}"</pre>
+    <h3>Expected Response — 201 Created</h3>
+    <pre>{
+  "id": "S1",
+  "type": "Temperature",
+  "status": "ACTIVE",
+  "currentValue": 22.5,
+  "roomId": "R1"
+}</pre>
+  </div>
+
+  <!-- 7. CREATE SENSOR MAINTENANCE -->
+  <div class="card">
+    <h2>7. Create Sensor (MAINTENANCE)</h2>
+    <p><span class="method POST">POST</span><code class="inline">/api/v1/sensors</code></p>
+    <p class="muted">Header: <code class="inline">Content-Type: application/json</code></p>
+    <h3>Raw JSON Body</h3>
+    <pre>{
+  "id": "S2",
+  "type": "CO2",
+  "status": "MAINTENANCE",
+  "currentValue": 400.0,
+  "roomId": "R1"
+}</pre>
+    <h3>Expected Response — 201 Created</h3>
+    <pre>{
+  "id": "S2",
+  "type": "CO2",
+  "status": "MAINTENANCE",
+  "currentValue": 400.0,
+  "roomId": "R1"
+}</pre>
+  </div>
+
+  <!-- 8. CREATE SENSOR INVALID ROOM -->
+  <div class="card">
+    <h2>8. Create Sensor with Invalid Room ID (422 test)</h2>
+    <p><span class="method POST">POST</span><code class="inline">/api/v1/sensors</code></p>
+    <p class="muted">Header: <code class="inline">Content-Type: application/json</code></p>
+    <h3>Raw JSON Body</h3>
+    <pre>{
+  "id": "S99",
+  "type": "Humidity",
+  "status": "ACTIVE",
+  "currentValue": 50.0,
+  "roomId": "DOES_NOT_EXIST"
+}</pre>
+    <h3>Expected Response — 422 Unprocessable Entity</h3>
+    <pre>{
+  "status": 422,
+  "error": "Unprocessable Entity",
+  "message": "Room with id 'DOES_NOT_EXIST' does not exist."
+}</pre>
+  </div>
+
+  <!-- 9. GET ALL SENSORS -->
+  <div class="card">
+    <h2>9. Get All Sensors</h2>
+    <p><span class="method GET">GET</span><code class="inline">/api/v1/sensors</code></p>
+    <h3>Request</h3>
+    <pre>GET http://localhost:8080/api/v1/sensors</pre>
+    <h3>Expected Response — 200 OK</h3>
+    <pre>[
+  {
+    "id": "S1",
+    "type": "Temperature",
+    "status": "ACTIVE",
+    "currentValue": 22.5,
+    "roomId": "R1"
+  },
+  {
+    "id": "S2",
+    "type": "CO2",
+    "status": "MAINTENANCE",
+    "currentValue": 400.0,
+    "roomId": "R1"
+  }
+]</pre>
+  </div>
+
+  <!-- 10. FILTER SENSORS BY TYPE -->
+  <div class="card">
+    <h2>10. Filter Sensors by Type</h2>
+    <p><span class="method GET">GET</span><code class="inline">/api/v1/sensors?type=Temperature</code></p>
+    <h3>Request</h3>
+    <pre>GET http://localhost:8080/api/v1/sensors?type=Temperature</pre>
+    <h3>Expected Response — 200 OK</h3>
+    <pre>[
+  {
+    "id": "S1",
+    "type": "Temperature",
+    "status": "ACTIVE",
+    "currentValue": 22.5,
+    "roomId": "R1"
+  }
+]</pre>
+  </div>
+
+  <!-- 11. ADD READING ACTIVE SENSOR -->
+  <div class="card">
+    <h2>11. Add Sensor Reading (ACTIVE sensor)</h2>
+    <p><span class="method POST">POST</span><code class="inline">/api/v1/sensors/S1/readings</code></p>
+    <p class="muted">Header: <code class="inline">Content-Type: application/json</code></p>
+    <h3>Raw JSON Body</h3>
+    <pre>{
+  "id": "RD1",
+  "timestamp": 1713780000,
+  "value": 24.8
+}</pre>
+    <h3>curl (Windows)</h3>
+    <pre>curl -X POST http://localhost:8080/api/v1/sensors/S1/readings ^
+-H "Content-Type: application/json" ^
+-d "{\"id\":\"RD1\",\"timestamp\":1713780000,\"value\":24.8}"</pre>
+    <h3>Expected Response — 201 Created</h3>
+    <pre>{
+  "id": "RD1",
+  "timestamp": 1713780000,
+  "value": 24.8
+}</pre>
+  </div>
+
+  <!-- 12. GET READINGS -->
+  <div class="card">
+    <h2>12. Get Sensor Reading History</h2>
+    <p><span class="method GET">GET</span><code class="inline">/api/v1/sensors/S1/readings</code></p>
+    <h3>Request</h3>
+    <pre>GET http://localhost:8080/api/v1/sensors/S1/readings</pre>
+    <h3>Expected Response — 200 OK</h3>
+    <pre>[
+  {
+    "id": "RD1",
+    "timestamp": 1713780000,
+    "value": 24.8
+  }
+]</pre>
+  </div>
+
+  <!-- 13. READING ON MAINTENANCE SENSOR -->
+  <div class="card">
+    <h2>13. Add Reading to MAINTENANCE Sensor (403 test)</h2>
+    <p><span class="method POST">POST</span><code class="inline">/api/v1/sensors/S2/readings</code></p>
+    <p class="muted">S2 was created with status MAINTENANCE in step 7. Header: <code class="inline">Content-Type: application/json</code></p>
+    <h3>Raw JSON Body</h3>
+    <pre>{
+  "id": "RD2",
+  "timestamp": 1713780100,
+  "value": 410.0
+}</pre>
+    <h3>Expected Response — 403 Forbidden</h3>
+    <pre>{
+  "status": 403,
+  "error": "Forbidden",
+  "message": "Sensor 'S2' is under maintenance and cannot accept new readings."
+}</pre>
+  </div>
+
+  <!-- 14. DELETE ROOM WITH SENSORS -->
+  <div class="card">
+    <h2>14. Delete Room with Sensors Inside (409 test)</h2>
+    <p><span class="method DELETE">DELETE</span><code class="inline">/api/v1/rooms/R1</code></p>
+    <p class="muted">R1 still has S1 and S2 attached. This should be blocked.</p>
+    <h3>Request</h3>
+    <pre>DELETE http://localhost:8080/api/v1/rooms/R1</pre>
+    <h3>Expected Response — 409 Conflict</h3>
+    <pre>{
+  "status": 409,
+  "error": "Conflict",
+  "message": "Room cannot be deleted because it still contains sensors: [S1, S2]"
+}</pre>
+  </div>
+
+  <!-- 15. DELETE EMPTY ROOM -->
+  <div class="card">
+    <h2>15. Delete Empty Room (200 test)</h2>
+    <p><span class="method DELETE">DELETE</span><code class="inline">/api/v1/rooms/R2</code></p>
+    <p class="muted">R2 has no sensors so it can be deleted safely.</p>
+    <h3>Request</h3>
+    <pre>DELETE http://localhost:8080/api/v1/rooms/R2</pre>
+    <h3>Expected Response — 200 OK</h3>
+    <pre>{
+  "status": 200,
+  "error": "OK",
+  "message": "Room 'R2' deleted successfully."
+}</pre>
+  </div>
+
+  <!-- 16. DELETE NON-EXISTENT ROOM -->
+  <div class="card">
+    <h2>16. Delete Non-Existent Room (404 test)</h2>
+    <p><span class="method DELETE">DELETE</span><code class="inline">/api/v1/rooms/INVALID</code></p>
+    <h3>Request</h3>
+    <pre>DELETE http://localhost:8080/api/v1/rooms/INVALID</pre>
+    <h3>Expected Response — 404 Not Found</h3>
+    <pre>{
+  "status": 404,
+  "error": "Not Found",
+  "message": "Room not found: INVALID"
+}</pre>
+  </div>
+
+  <!-- 17. WRONG CONTENT TYPE -->
+  <div class="card">
+    <h2>17. Wrong Content-Type Test</h2>
+    <p><span class="method POST">POST</span><code class="inline">/api/v1/rooms</code></p>
+    <p class="muted">Set header to <code class="inline">Content-Type: text/plain</code> and send plain text.</p>
+    <pre>Content-Type: text/plain
+
+invalid data</pre>
+    <p class="muted">Expected: <b>415 Unsupported Media Type</b> — the endpoint only accepts <code class="inline">application/json</code>.</p>
+  </div>
+
+  <!-- 18. INVALID ENDPOINT -->
+  <div class="card">
+    <h2>18. Invalid Endpoint Test (404)</h2>
+    <p><span class="method GET">GET</span><code class="inline">/api/v1/unknown</code></p>
+    <h3>Request</h3>
+    <pre>GET http://localhost:8080/api/v1/unknown</pre>
+    <p class="muted">Expected: <b>404</b> — no resource is mapped to this path.</p>
+  </div>
+
+  <!-- 19. BROKEN JSON -->
+  <div class="card">
+    <h2>19. Broken JSON Test (500)</h2>
+    <p><span class="method POST">POST</span><code class="inline">/api/v1/rooms</code></p>
+    <p class="muted">Header: <code class="inline">Content-Type: application/json</code></p>
+    <h3>Broken JSON Body</h3>
+    <pre>{
+  "id": "R3",
+  "name": "Lab 3",</pre>
+    <h3>Expected Response — 500 Internal Server Error</h3>
+    <pre>{
+  "status": 500,
+  "error": "Internal Server Error",
+  "message": "An unexpected error occurred."
+}</pre>
+  </div>
+
+  <!-- TEST COVERAGE SUMMARY -->
+  <div class="card">
+    <h2>Test Coverage Summary</h2>
+    <ul>
+      <li><b>200 OK</b> — successful GET requests and empty room DELETE</li>
+      <li><b>201 Created</b> — successful POST for room, sensor, and reading</li>
+      <li><b>400 Bad Request</b> — missing required field (id, name, roomId)</li>
+      <li><b>403 Forbidden</b> — posting a reading to a MAINTENANCE sensor</li>
+      <li><b>404 Not Found</b> — room or sensor does not exist</li>
+      <li><b>409 Conflict</b> — deleting a room that still has sensors</li>
+      <li><b>415 Unsupported Media Type</b> — wrong Content-Type header</li>
+      <li><b>422 Unprocessable Entity</b> — sensor created with non-existent roomId</li>
+      <li><b>500 Internal Server Error</b> — malformed JSON body</li>
+      <li>Filtering using <code class="inline">?type=</code> query parameter</li>
+      <li>Sub-resource testing with <code class="inline">/sensors/{id}/readings</code></li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    Smart Campus API &mdash; 5COSC022W Client-Server Architectures &mdash; University of Westminster &mdash; 2025/26
+  </div>
+
+</div>
+</body>
+</html>

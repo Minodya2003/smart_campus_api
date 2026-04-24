@@ -38,16 +38,51 @@ This API implements the Smart Campus scenario defined in the coursework brief. I
 
 ---
 
-## 🏗 Project Architecture & Structure
-The project follows a clean, layered architecture to ensure separation of concerns:
-
-*   `com.smartcampus.model`: Core domain entities.
-*   `com.smartcampus.store`: In-memory persistence using the Singleton pattern.
-*   `com.smartcampus.resource`: REST API controllers and endpoint definitions.
-*   `com.smartcampus.exception`: Custom business-level exceptions.
-*   `com.smartcampus.mapper`: Framework-level exception mappers.
-*   `com.smartcampus.filter`: Middleware for logging request/response cycles.
-*   `com.smartcampus.dto`: Standardized data transfer objects for error responses.
+Project Structure
+SmartCampusAPI/
+├── pom.xml
+├── README.md
+├── nb-configuration.xml
+├── src/
+│   └── main/
+│       ├── java/com/smartcampus/
+│       │   ├── app/
+│       │   │   └── SmartCampusApplication.java
+│       │   ├── core/
+│       │   │   ├── domain/
+│       │   │   │   ├── room/
+│       │   │   │   │   └── Room.java
+│       │   │   │   ├── sensor/
+│       │   │   │   │   └── Sensor.java
+│       │   │   │   └── reading/
+│       │   │   │       └── SensorReading.java
+│       │   │   └── errors/
+│       │   │       ├── LinkedResourceNotFoundException.java
+│       │   │       ├── RoomNotEmptyException.java
+│       │   │       └── SensorUnavailableException.java
+│       │   ├── infrastructure/
+│       │   │   ├── persistence/
+│       │   │   │   └── DataStore.java
+│       │   │   └── web/
+│       │   │       └── LoggingFilter.java
+│       │   └── api/
+│       │       ├── endpoints/
+│       │       │   ├── DiscoveryResource.java
+│       │       │   ├── RoomResource.java
+│       │       │   ├── SensorResource.java
+│       │       │   ├── SensorReadingResource.java
+│       │       │   ├── GlobalExceptionMapper.java
+│       │       │   ├── LinkedResourceNotFoundExceptionMapper.java
+│       │       │   ├── RoomNotEmptyExceptionMapper.java
+│       │       │   └── SensorUnavailableExceptionMapper.java
+│       │       └── response/
+│       │           └── ErrorResponse.java
+│       └── webapp/
+│           ├── index.html
+│           ├── META-INF/
+│           │   └── context.xml
+│           └── WEB-INF/
+│               └── web.xml
 
 ---
 
