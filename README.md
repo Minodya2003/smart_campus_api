@@ -1,44 +1,53 @@
 # Smart Campus Sensor & Room Management API
 
-## 📌 Project Overview
-This project is a high-performance RESTful API designed for the **5COSC022W Client-Server Architectures** coursework. It provides a digital twin of a smart campus environment, allowing for efficient management of physical spaces and IoT devices.
+## 📝 Overview
+This project is a RESTful API developed for the **5COSC022W Client-Server Architectures** coursework. It models a simple smart campus environment in which:
+*   Rooms can be created, listed, retrieved, and deleted.
+*   Sensors can be registered and linked to rooms.
+*   Sensor readings can be stored and retrieved.
+*   Sensors can be filtered by type.
+*   Errors are returned as structured JSON responses.
+*   Incoming requests and outgoing responses are logged.
 
-**Key Capabilities:**
-*   Manage campus rooms (Create, List, Retrieve, Delete).
-*   Register IoT sensors and associate them with specific rooms.
-*   Record and track historical sensor readings.
-*   Dynamic sensor filtering based on device types.
-*   Robust error management with structured JSON feedback.
-*   Comprehensive HTTP traffic logging for auditing.
-
-The system is built using the **JAX-RS (Jersey)** framework. In accordance with the coursework requirements, it utilizes an in-memory persistence layer, ensuring no external database dependencies while focusing on core architectural principles.
+The system is implemented using **JAX-RS (Jersey)** and stores all data in memory using Java collections. This means the project intentionally does not use a database, and all stored data is lost when the application restarts.
 
 ---
 
 ## 🎓 Coursework Context
-This API implements the Smart Campus scenario defined in the coursework brief. It focuses on three core entities:
-*   **Room:** A physical location defined by its ID, name, capacity, and the set of sensors it contains.
-*   **Sensor:** A device monitoring a specific room, characterized by its type, operational status, and real-time value.
-*   **SensorReading:** A time-stamped data event representing a recorded value from a sensor.
+This API is based on the Smart Campus scenario in the coursework brief. The system models three main resources:
+*   **Room:** A physical campus room with an ID, name, capacity, and a list of assigned sensor IDs.
+*   **Sensor:** A device assigned to a room, with an ID, type, status, current value, and room reference.
+*   **SensorReading:** A historical reading event with an ID, timestamp, and numeric value.
 
-**Design Priorities:**
-*   Adherence to RESTful maturity (Resource hierarchy & sub-resources).
-*   Strict input validation and business logic enforcement.
-*   Safe exception handling through specialized mappers.
+**The specification focuses on:**
+*   RESTful design principles.
+*   Resource hierarchy and nested resources.
+*   Validation and business rules.
+*   Exception mapping and safe error handling.
+*   Request/response logging.
 
 ---
 
 ## 🛠 Technology Stack
-*   **Java:** Version 11 or higher
-*   **Standard:** JAX-RS (javax.ws.rs)
-*   **Implementation:** Jersey 2.40
-*   **Build Tool:** Maven
-*   **Deployment:** Apache Tomcat 9.0 (Java EE 8)
-*   **IDE:** NetBeans
+*   **Java 11+**
+*   **JAX-RS / javax.ws.rs**
+*   **Jersey 2.40**
+*   **Maven**
+*   **Apache Tomcat 9.0** (Servlet 4.0 / Java EE 8)
+*   **NetBeans IDE**
 
 ---
 
-### 📂 Project Structure
+## 🏗 Project Architecture
+The project follows a domain-driven layered structure organised into four top-level layers:
+*   **app/** — Application bootstrap and JAX-RS entry point.
+*   **core/** — Pure domain logic: models and custom exceptions.
+*   **infrastructure/** — Technical concerns: in-memory persistence and HTTP logging.
+*   **api/** — REST layer: endpoint resources, exception mappers, and response DTOs.
+
+---
+
+## 📂 Project Structure
 ```text
 SmartCampusAPI/
 ├── pom.xml
@@ -90,58 +99,107 @@ SmartCampusAPI/
 
 ## 📡 API Design Summary
 
-**Base URL:** `http://localhost:8080/SmartCampusAPI/api/v1`
+**Base Path:** `/api/v1`
 
 | Method | Endpoint | Description |
 |:-------|:---------|:------------|
-| GET | `/` | API Metadata & Discovery |
-| GET | `/rooms` | Retrieve all registered rooms |
-| POST | `/rooms` | Add a new campus room |
-| DELETE | `/rooms/{id}` | Remove a room (only if empty) |
-| GET | `/sensors` | List all sensors (supports `?type=` filter) |
-| POST | `/sensors` | Register a new sensor |
-| GET | `/sensors/{id}/readings` | Fetch historical data for a sensor |
-| POST | `/sensors/{id}/readings` | Record a new measurement |
+| GET | `/api/v1/` | Discovery endpoint with version and resource map |
+| GET | `/api/v1/rooms` | List all rooms |
+| POST | `/api/v1/rooms` | Create a room |
+| GET | `/api/v1/rooms/{id}` | Fetch one room |
+| DELETE | `/api/v1/rooms/{id}` | Delete a room if no sensors remain assigned |
+| GET | `/api/v1/sensors` | List all sensors (supports `?type=` filter) |
+| POST | `/api/v1/sensors` | Create a new sensor linked to a room |
+| GET | `/api/v1/sensors/{id}/readings` | Get readings history for a sensor |
+| POST | `/api/v1/sensors/{id}/readings` | Append a new reading and update the sensor's value |
 
 ---
 
-## 🚀 Build and Run Instructions
+## 💾 Data Storage Strategy
+The application uses in-memory collections in `DataStore` under `infrastructure/persistence/`:
+*   `Map<String, Room> rooms`
+*   `Map<String, Sensor> sensors`
+*   `Map<String, List<SensorReading>> readings`
 
-### Prerequisites
-1.  Java 11+ installed and configured.
-2.  Apache Tomcat 9.x server available.
+This approach is appropriate for the coursework because the brief explicitly forbids database use and expects storage using structures such as `HashMap` and `ArrayList`.
 
-### Manual Deployment
-1.  Clone the repository and navigate to the project root.
-2.  Run the Maven build:
-    ```bash
-    mvn clean package
-    ```
-3.  Copy `target/SmartCampusAPI.war` to the Tomcat `webapps` folder.
-4.  Start the Tomcat server.
+---
+
+## 🚀 How to Build and Run
+
+### Option 1: Run with NetBeans and Tomcat
+1.  Install Java 11 or higher.
+2.  Install Apache Tomcat 9.0 (Servlet 4.0 compatible).
+3.  Open the project in NetBeans.
+4.  Make sure Tomcat is added as a server in NetBeans.
+5.  Clean and build the project.
+6.  Deploy the WAR to Tomcat through NetBeans.
+7.  Open the API base URL: `http://localhost:8080/SmartCampusAPI/api/v1/`
+
+### Option 2: Build with Maven and Deploy Manually
+1.  Build the project: `mvn clean package`
+2.  Locate the WAR file: `target/SmartCampusAPI.war`
+3.  Copy the WAR file into Tomcat's `webapps` folder.
+4.  Start Tomcat and access the API.
 
 ---
 
 ## 🧪 Sample curl Commands
 
-**1. API Discovery**
+**1. Discovery Endpoint**
 ```bash
 curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/
 ```
 
-**2. Create a New Room**
+**2. Create a Room**
 ```bash
 curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/rooms \
   -H "Content-Type: application/json" \
-  -d '{"id":"R101","name":"Main Lab","location":"Block A","capacity":30}'
+  -d '{"id":"R1","name":"Lab 1","capacity":40}'
 ```
 
-**3. Register a Sensor**
+**3. Create a Sensor**
 ```bash
 curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors \
   -H "Content-Type: application/json" \
-  -d '{"id":"S101","type":"TEMP","status":"ACTIVE","roomId":"R101"}'
+  -d '{"id":"S1","type":"Temperature","status":"ACTIVE","roomId":"R1"}'
 ```
+
+**4. Add a Sensor Reading**
+```bash
+curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors/S1/readings \
+  -H "Content-Type: application/json" \
+  -d '{"value":24.8}'
+```
+
+---
+
+## ⚠️ Error Handling Strategy
+The API uses dedicated exception classes under `core/errors/` and exception mappers under `api/endpoints/` to avoid default server error pages and to return structured JSON error bodies.
+
+**Implemented Custom Error Scenarios:**
+*   **409 Conflict:** Deleting a room that still contains assigned sensors.
+*   **422 Unprocessable Entity:** Creating a sensor with a `roomId` that does not exist.
+*   **403 Forbidden:** Posting a reading to a sensor in `MAINTENANCE`.
+*   **500 Internal Server Error:** Unexpected unhandled runtime failures.
+
+---
+
+## 📝 Logging
+A custom logging filter in `infrastructure/web/LoggingFilter.java` captures:
+*   The HTTP method and request URI for every incoming request.
+*   The final HTTP status code for every outgoing response.
+
+**Example:**
+*   Incoming Request: `GET http://localhost:8080/api/v1/rooms`
+*   Outgoing Response: `HTTP 200`
+
+---
+
+## 🚫 Limitations
+*   No persistence layer is used, so all data is reset when the server restarts.
+*   The current implementation returns created entities directly, but for stronger REST practice a POST could explicitly return 201 Created with a Location header.
+*   The current readings implementation is modular and nested by path, but could be further optimized.
 
 ---
 
@@ -171,7 +229,7 @@ It promotes modularity. Instead of having one massive class for all sensor-relat
 **Q8: Why should a POST to a reading also update the parent sensor's currentValue?**
 To ensure "Data Integrity." If a new reading is recorded, the sensor's current state must reflect that measurement. If they aren't synchronized, the API would provide conflicting information, confusing the client and rendering the "current value" field useless.
 
-**Q9: Why is 422 more accurate than 404 for a missing roomId in a POST?**
+**Q9: Why is HTTP 422 more semantically accurate than 404 when a referenced roomId doesn't exist?**
 An HTTP 404 implies the endpoint itself is missing. However, in this case, the endpoint exists, but the data provided in the request body is logically invalid (referencing a non-existent room). HTTP 422 (Unprocessable Entity) correctly signals that the request is well-formed but contains semantic errors.
 
 **Q10: Cybersecurity risks of exposing Java stack traces?**
