@@ -38,7 +38,8 @@ This API implements the Smart Campus scenario defined in the coursework brief. I
 
 ---
 
-Project Structure
+### 📂 Project Structure
+```text
 SmartCampusAPI/
 ├── pom.xml
 ├── README.md
@@ -83,6 +84,7 @@ SmartCampusAPI/
 │           │   └── context.xml
 │           └── WEB-INF/
 │               └── web.xml
+```
 
 ---
 
