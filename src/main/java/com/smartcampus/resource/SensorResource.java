@@ -15,19 +15,25 @@ public class SensorResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response addSensor(Sensor s) {
-        if (!store.rooms.containsKey(s.getRoomId())) {
+        if (!store.getRooms().containsKey(s.getRoomId())) {
             throw new LinkedResourceNotFoundException("Room '" + s.getRoomId() + "' does not exist.");
         }
-        store.sensors.put(s.getId(), s);
-        store.rooms.get(s.getRoomId()).getSensorIds().add(s.getId());
+        if (store.getSensors().containsKey(s.getId())) {
+            return Response.status(409)
+                    .entity(new ErrorResponse(409, "Sensor with ID '" + s.getId() + "' already exists."))
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+        }
+        store.getSensors().put(s.getId(), s);
+        store.getRooms().get(s.getRoomId()).getSensorIds().add(s.getId());
         return Response.status(201).entity(s).type(MediaType.APPLICATION_JSON).build();
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Sensor> getSensors(@QueryParam("type") String type) {
-        if (type == null) return new ArrayList<>(store.sensors.values());
-        return store.sensors.values().stream()
+        if (type == null) return new ArrayList<>(store.getSensors().values());
+        return store.getSensors().values().stream()
                 .filter(s -> s.getType().equalsIgnoreCase(type)).collect(java.util.stream.Collectors.toList());
     }
 
@@ -35,7 +41,7 @@ public class SensorResource {
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getSensor(@PathParam("id") String id) {
-        Sensor sensor = store.sensors.get(id);
+        Sensor sensor = store.getSensors().get(id);
         if (sensor == null) {
             return Response.status(404)
                     .entity(new ErrorResponse(404, "Sensor not found: " + id))
@@ -47,7 +53,7 @@ public class SensorResource {
 
     @Path("/{id}/readings")
     public SensorReadingResource getReadings(@PathParam("id") String id) {
-        Sensor sensor = store.sensors.get(id);
+        Sensor sensor = store.getSensors().get(id);
         if (sensor == null) {
             throw new NotFoundException(
                     Response.status(404)

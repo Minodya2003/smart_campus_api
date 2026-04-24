@@ -7,10 +7,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DataStore {
     private static final DataStore instance = new DataStore();
 
-    public Map<String, Room> rooms = new ConcurrentHashMap<>();
-    public Map<String, Sensor> sensors = new ConcurrentHashMap<>();
-    public Map<String, List<SensorReading>> readings = new ConcurrentHashMap<>();
+    private Map<String, Room> rooms = new ConcurrentHashMap<>();
+    private Map<String, Sensor> sensors = new ConcurrentHashMap<>();
+    private Map<String, List<SensorReading>> readings = new ConcurrentHashMap<>();
 
     private DataStore() {}
     public static DataStore getInstance() { return instance; }
+
+    public Map<String, Room> getRooms() { return rooms; }
+    public Map<String, Sensor> getSensors() { return sensors; }
+    public Map<String, List<SensorReading>> getReadings() { return readings; }
 }

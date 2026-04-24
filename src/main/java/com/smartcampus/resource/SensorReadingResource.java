@@ -17,7 +17,7 @@ public class SensorReadingResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response postReading(SensorReading reading) {
-        Sensor s = store.sensors.get(sensorId);
+        Sensor s = store.getSensors().get(sensorId);
         if (s == null) {
             return Response.status(404)
                     .entity(new ErrorResponse(404, "Sensor not found: " + sensorId))
@@ -30,14 +30,14 @@ public class SensorReadingResource {
         }
 
         s.setCurrentValue(reading.getValue());
-        store.readings.computeIfAbsent(sensorId, k -> new ArrayList<>()).add(reading);
+        store.getReadings().computeIfAbsent(sensorId, k -> Collections.synchronizedList(new ArrayList<>())).add(reading);
         return Response.status(201).entity(reading).type(MediaType.APPLICATION_JSON).build();
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getHistory() {
-        List<SensorReading> history = store.readings.getOrDefault(sensorId, new ArrayList<>());
-        return Response.ok(history).build();
+        List<SensorReading> history = store.getReadings().getOrDefault(sensorId, new ArrayList<>());
+        return Response.ok(new ArrayList<>(history)).build();
     }
 }
