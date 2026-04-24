@@ -1,107 +1,144 @@
-# SmartCampusAPI
+# Smart Campus Sensor & Room Management API
 
-A robust JAX-RS REST API for managing smart campus resources (Rooms and Sensors) built for the **5COSC022W - Client-Server Architectures** coursework at the University of Westminster.
+## 📌 Project Overview
+This project is a high-performance RESTful API designed for the **5COSC022W Client-Server Architectures** coursework. It provides a digital twin of a smart campus environment, allowing for efficient management of physical spaces and IoT devices.
 
-## 🚀 Features
+**Key Capabilities:**
+*   Manage campus rooms (Create, List, Retrieve, Delete).
+*   Register IoT sensors and associate them with specific rooms.
+*   Record and track historical sensor readings.
+*   Dynamic sensor filtering based on device types.
+*   Robust error management with structured JSON feedback.
+*   Comprehensive HTTP traffic logging for auditing.
 
-*   **Comprehensive Resource Management:** CRUD operations for Rooms and Sensors.
-*   **Sub-resource Pattern:** Sensor readings are managed as sub-resources of specific sensors (`/sensors/{id}/readings`).
-*   **Global Exception Handling:** Custom `ExceptionMappers` ensure all errors return standardized JSON responses.
-*   **Thread Safety:** Concurrent data access is handled using `ConcurrentHashMap` and synchronized collections.
-*   **Request/Response Logging:** A custom `LoggingFilter` logs all incoming requests and outgoing responses.
-*   **API Discovery:** A root endpoint provides basic API metadata.
+The system is built using the **JAX-RS (Jersey)** framework. In accordance with the coursework requirements, it utilizes an in-memory persistence layer, ensuring no external database dependencies while focusing on core architectural principles.
+
+---
+
+## 🎓 Coursework Context
+This API implements the Smart Campus scenario defined in the coursework brief. It focuses on three core entities:
+*   **Room:** A physical location defined by its ID, name, capacity, and the set of sensors it contains.
+*   **Sensor:** A device monitoring a specific room, characterized by its type, operational status, and real-time value.
+*   **SensorReading:** A time-stamped data event representing a recorded value from a sensor.
+
+**Design Priorities:**
+*   Adherence to RESTful maturity (Resource hierarchy & sub-resources).
+*   Strict input validation and business logic enforcement.
+*   Safe exception handling through specialized mappers.
+
+---
 
 ## 🛠 Technology Stack
-
-*   **Language:** Java 11
-*   **API Standard:** JAX-RS (javax.ws.rs)
-*   **Framework:** Jersey 2.40
-*   **Web Server:** Apache Tomcat 9.x
-*   **Data Format:** JSON (Jackson)
+*   **Java:** Version 11 or higher
+*   **Standard:** JAX-RS (javax.ws.rs)
+*   **Implementation:** Jersey 2.40
 *   **Build Tool:** Maven
+*   **Deployment:** Apache Tomcat 9.0 (Java EE 8)
+*   **IDE:** NetBeans
 
-## 📂 Project Structure
+---
 
-*   `com.smartcampus.model`: Domain entities (Room, Sensor, SensorReading).
-*   `com.smartcampus.resource`: JAX-RS resources defining the API endpoints.
-*   `com.smartcampus.store`: In-memory `DataStore` using the Singleton pattern.
-*   `com.smartcampus.exception`: Custom business exception classes.
-*   `com.smartcampus.mapper`: Exception mappers for converting exceptions to JSON responses.
-*   `com.smartcampus.filter`: Filters for logging and request processing.
-*   `com.smartcampus.dto`: Data Transfer Objects (e.g., standardized ErrorResponse).
+## 🏗 Project Architecture & Structure
+The project follows a clean, layered architecture to ensure separation of concerns:
 
-## 📡 API Endpoints
+*   `com.smartcampus.model`: Core domain entities.
+*   `com.smartcampus.store`: In-memory persistence using the Singleton pattern.
+*   `com.smartcampus.resource`: REST API controllers and endpoint definitions.
+*   `com.smartcampus.exception`: Custom business-level exceptions.
+*   `com.smartcampus.mapper`: Framework-level exception mappers.
+*   `com.smartcampus.filter`: Middleware for logging request/response cycles.
+*   `com.smartcampus.dto`: Standardized data transfer objects for error responses.
 
-### Discovery
-*   `GET /api/v1/` - Get API discovery metadata.
+---
 
-### Rooms
-*   `GET /api/v1/rooms` - List all rooms.
-*   `POST /api/v1/rooms` - Create a new room.
-*   `GET /api/v1/rooms/{id}` - Get specific room details.
-*   `DELETE /api/v1/rooms/{id}` - Delete a room (fails if sensors are attached).
+## 📡 API Design Summary
 
-### Sensors
-*   `GET /api/v1/sensors` - List all sensors (supports filtering by `type`).
-*   `POST /api/v1/sensors` - Create a new sensor (associates with a room).
-*   `GET /api/v1/sensors/{id}` - Get specific sensor details.
+**Base URL:** `http://localhost:8080/SmartCampusAPI/api/v1`
 
-### Sensor Readings
-*   `GET /api/v1/sensors/{id}/readings` - Get history of readings for a sensor.
-*   `POST /api/v1/sensors/{id}/readings` - Add a new sensor reading (updates sensor state).
+| Method | Endpoint | Description |
+|:-------|:---------|:------------|
+| GET | `/` | API Metadata & Discovery |
+| GET | `/rooms` | Retrieve all registered rooms |
+| POST | `/rooms` | Add a new campus room |
+| DELETE | `/rooms/{id}` | Remove a room (only if empty) |
+| GET | `/sensors` | List all sensors (supports `?type=` filter) |
+| POST | `/sensors` | Register a new sensor |
+| GET | `/sensors/{id}/readings` | Fetch historical data for a sensor |
+| POST | `/sensors/{id}/readings` | Record a new measurement |
 
-## ⚠️ Error Handling
+---
 
-The API returns standardized JSON error responses:
-```json
-{
-  "status": 404,
-  "message": "Sensor not found: S101"
-}
-```
-*   `400 Bad Request`: Validation errors or invalid relationships.
-*   `403 Forbidden`: Business rule violations (e.g., sensor is offline).
-*   `404 Not Found`: Resource does not exist.
-*   `409 Conflict`: Duplicate IDs or invalid state transitions.
+## 🚀 Build and Run Instructions
 
-## 🏗 Build and Deployment
+### Prerequisites
+1.  Java 11+ installed and configured.
+2.  Apache Tomcat 9.x server available.
 
-### 1. Build the WAR file
-Run the following command in the project root:
+### Manual Deployment
+1.  Clone the repository and navigate to the project root.
+2.  Run the Maven build:
+    ```bash
+    mvn clean package
+    ```
+3.  Copy `target/SmartCampusAPI.war` to the Tomcat `webapps` folder.
+4.  Start the Tomcat server.
+
+---
+
+## 🧪 Sample curl Commands
+
+**1. API Discovery**
 ```bash
-mvn clean package
+curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/
 ```
-This generates `target/SmartCampusAPI.war`.
 
-### 2. Deploy to Tomcat 9
-Copy the `.war` file to your Tomcat `webapps` directory.
-
-### 3. Access the API
-The base URL will be:
-`http://localhost:8080/SmartCampusAPI/api/v1/`
-
-## 🧪 Testing with cURL
-
-**Create a Room:**
+**2. Create a New Room**
 ```bash
 curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/rooms \
-     -H "Content-Type: application/json" \
-     -d '{"id":"R101", "name":"Main Lab", "location":"Block A", "capacity":30}'
+  -H "Content-Type: application/json" \
+  -d '{"id":"R101","name":"Main Lab","location":"Block A","capacity":30}'
 ```
 
-**Add a Sensor:**
+**3. Register a Sensor**
 ```bash
 curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors \
-     -H "Content-Type: application/json" \
-     -d '{"id":"S101", "type":"TEMPERATURE", "status":"ACTIVE", "roomId":"R101"}'
-```
-
-**Post a Reading:**
-```bash
-curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors/S101/readings \
-     -H "Content-Type: application/json" \
-     -d '{"value":24.5, "timestamp":"2023-10-27T10:00:00Z"}'
+  -H "Content-Type: application/json" \
+  -d '{"id":"S101","type":"TEMP","status":"ACTIVE","roomId":"R101"}'
 ```
 
 ---
-*Developed as part of the Client-Server Architectures (5COSC022W) Coursework.*
+
+## 📝 Conceptual Report (Q&A)
+
+**Q1: What is the default lifecycle of a JAX-RS resource class?**
+By default, JAX-RS resources follow a "per-request" lifecycle. The framework instantiates a new object for every incoming HTTP request. While this prevents state leakage between requests within the class, it means shared data must be stored externally (like our `DataStore` singleton) to remain persistent across multiple calls.
+
+**Q2: Why is Hypermedia (HATEOAS) considered important?**
+HATEOAS allows an API to be self-guiding. By including navigation links in the response, the server tells the client what actions are currently available. This decouples the client from hardcoded URLs, making the system more flexible and easier to update without breaking existing client implementations.
+
+**Q3: Implications of returning IDs vs full objects in lists?**
+Returning only IDs minimizes bandwidth and speeds up initial requests, but forces the client to make multiple follow-up calls to get details. Returning full objects provides all data at once, reducing latency but increasing the response size. For small-scale systems like this campus API, full objects are generally more efficient.
+
+**Q4: Is the DELETE operation idempotent in this API?**
+Yes. Whether you call DELETE once or ten times, the final state of the server is the same: the resource is gone. The first call returns success, while subsequent calls return a 404, but the server's state does not change further, satisfying the definition of idempotency.
+
+**Q5: Sending the wrong Content-Type to a @Consumes(APPLICATION_JSON) endpoint?**
+The JAX-RS runtime performs an early check on the `Content-Type` header. If a client sends `text/plain` to an endpoint expecting JSON, the server will immediately issue an HTTP 415 (Unsupported Media Type) response before the method logic is even executed.
+
+**Q6: Why use @QueryParam instead of a path segment for filtering?**
+Path segments are meant to identify specific resources or hierarchies. Filtering (like selecting sensors by type) is a "view" or a "query" on an existing collection, not a new resource. Query parameters are the standard RESTful way to provide optional parameters for searching, sorting, and filtering.
+
+**Q7: Benefits of the Sub-Resource Locator pattern?**
+It promotes modularity. Instead of having one massive class for all sensor-related logic, the locator delegates reading-specific operations to a separate `SensorReadingResource`. This makes the code cleaner, more readable, and easier to maintain as the API expands.
+
+**Q8: Why should a POST to a reading also update the parent sensor's currentValue?**
+To ensure "Data Integrity." If a new reading is recorded, the sensor's current state must reflect that measurement. If they aren't synchronized, the API would provide conflicting information, confusing the client and rendering the "current value" field useless.
+
+**Q9: Why is 422 more accurate than 404 for a missing roomId in a POST?**
+An HTTP 404 implies the endpoint itself is missing. However, in this case, the endpoint exists, but the data provided in the request body is logically invalid (referencing a non-existent room). HTTP 422 (Unprocessable Entity) correctly signals that the request is well-formed but contains semantic errors.
+
+**Q10: Cybersecurity risks of exposing Java stack traces?**
+Stack traces reveal internal implementation details, such as package names, third-party library versions, and potential vulnerabilities in the code logic. Attackers can use this "information leakage" to map out the system and plan targeted exploits. Standardized JSON error messages hide these details while still informing the client of the error type.
+
+---
+*Developed for 5COSC022W Coursework - University of Westminster.*
